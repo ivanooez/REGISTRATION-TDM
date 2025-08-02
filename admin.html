@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <title>Админ - Участници</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      color: #fff;
+      padding: 20px;
+      margin: 0;
+      animation: fadeInBody 2s ease;
+    }
+    h2 {
+      color: #00ffe7;
+      text-shadow: 0 0 10px #00ffe7;
+      animation: glowTitle 3s infinite alternate;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    li {
+      background: rgba(0, 0, 0, 0.6);
+      margin: 10px 0;
+      padding: 10px;
+      border-left: 4px solid #00ffe7;
+      box-shadow: 0 0 10px rgba(0, 255, 231, 0.5);
+      animation: slideInLeft 0.5s ease;
+    }
+    input.kills {
+      width: 40px;
+      margin-left: 5px;
+      border-radius: 6px;
+      border: none;
+      padding: 4px;
+    }
+    select,
+    button {
+      margin: 10px 5px 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      background: #00ffe7;
+      color: #000;
+      animation: pulseBtn 1.5s infinite;
+      transition: background 0.3s;
+    }
+    button:hover,
+    select:hover {
+      background: #00ccff;
+    }
+    #мачове div {
+      background: rgba(0, 0, 0, 0.5);
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #00ffe7;
+      animation: popIn 0.6s ease;
+    }
+    #победител {
+      font-size: 24px;
+      color: #a0ffb3;
+      font-weight: bold;
+      margin-top: 20px;
+      animation: successGlow 2s infinite alternate;
+    }
+    @keyframes fadeInBody {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes glowTitle {
+      from {
+        text-shadow: 0 0 10px #00ffe7;
+      }
+      to {
+        text-shadow: 0 0 20px #00ffe7, 0 0 30px #00d4ff;
+      }
+    }
+    @keyframes slideInLeft {
+      from {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes pulseBtn {
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 231, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(0, 255, 231, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 231, 0);
+      }
+    }
+    @keyframes popIn {
+      0% {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    @keyframes successGlow {
+      from {
+        text-shadow: 0 0 5px #00ff99;
+      }
+      to {
+        text-shadow: 0 0 20px #00ff99;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Участници</h2>
+  <ul id="участници-списък"></ul>
+  <label for="брой-участници">Избери брой участници:</label>
+  <select id="брой-участници">
+    <option value="8">8</option>
+    <option value="16">16</option>
+    <option value="32">32</option>
+  </select>
+  <button onclick="стартирайТурнир()">Стартирай турнир</button>
+  <button onclick="изчистиУчастниците()">Изтрий всички участници</button>
+  <button onclick="експортирайУчастници()">Експортирай в JSON</button>
+  <a id="download-link" style="display: none;"></a>
+  <div id="мачове"></div>
+  <div id="победител"></div>
+  <script>
+    const списък = document.getElementById('участници-списък');
+    let участници = (JSON.parse(localStorage.getItem('участници')) || []).filter(
+      (e) => e && e.name && e.id && !e.id.startsWith('BOT')
+    );
+    участници.forEach((entry) => {
+      const li = document.createElement('li');
+      li.textContent = `Играч: ${entry.name} | PUBG ID: ${entry.id}`;
+      списък.appendChild(li);
+    });
+    function изчистиУчастниците() {
+      localStorage.removeItem('участници');
+      alert('Участниците са изтрити.');
+      location.reload();
+    }
+    function експортирайУчастници() {
+      const участници = JSON.parse(localStorage.getItem('участници')) || [];
+      const dataStr =
+        'data:text/json;charset=utf-8,' +
+        encodeURIComponent(JSON.stringify(участници, null, 2));
+      const downloadAnchorNode = document.getElementById('download-link');
+      downloadAnchorNode.setAttribute('href', dataStr);
+      downloadAnchorNode.setAttribute('download', 'uchastnici.json');
+      downloadAnchorNode.click();
+    }
+    let победители = [];
+    let текущКръг = 1;
+    let максималенБрой = 0;
+    function размеси(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function стартирайТурнир() {
+      текущКръг = 1;
+      победители = размеси([...участници]).slice(
+        0,
+        parseInt(document.getElementById('брой-участници').value)
+      );
+      максималенБрой = победители.length;
+      следващКръг();
+    }
+    function следващКръг() {
+      const контейнер = document.getElementById('мачове');
+      контейнер.innerHTML = `<h3>Кръг ${текущКръг}</h3>`;
+      const текущи = [...победители];
+      победители = [];
+      for (let i = 0; i < текущи.length; i += 2) {
+        if (!текущи[i] || !текущи[i + 1]) continue;
+        const id1 = `r${текущКръг}_${i}`;
+        const id2 = `r${текущКръг}_${i + 1}`;
+        const div = document.createElement('div');
+        div.innerHTML = `
+          ${текущи[i].name} vs ${текущи[i + 1].name}
+          <br />Килове:
+          <input type="number" class="kills" id="${id1}" min="0" />
+          <input type="number" class="kills" id="${id2}" min="0" />
+          <button onclick="избериПоКилове('${текущи[i].name}', '${текущи[i + 1].name}', '${id1}', '${id2}', this.parentElement)">Избери по килове</button>
+        `;
+        контейнер.appendChild(div);
+      }
+    }
+    function избериПоКилове(name1, name2, id1, id2, container) {
+      const k1 = parseInt(document.getElementById(id1).value) || 0;
+      const k2 = parseInt(document.getElementById(id2).value) || 0;
+      let победител = k1 > k2 ? name1 : name2;
+      if (k1 === k2) победител = name1;
+      добавиПобедител(победител, container);
+    }
+    function добавиПобедител(име, контейнер) {
+      победители.push({ name: име });
+      контейнер.innerHTML += ` ✅ Победител: ${име}`;
+      контейнер.querySelectorAll('button').forEach((btn) => (btn.disabled = true));
+      const общоМачове = максималенБрой / Math.pow(2, текущКръг);
+      if (победители.length >= общоМачове) {
+        if (победители.length === 1) {
+          показайПобедител(победители[0].name);
+        } else {
+          текущКръг++;
+          setTimeout(следващКръг, 500);
+        }
+      }
+    }
+    function показайПобедител(име) {
+      const div = document.getElementById('победител');
+      div.innerHTML = `🏆 ПОБЕДИТЕЛ: ${име} 🏆<br>Свържи се с админ за наградата си от 100 лв. Поздравления!`;
+    }
+  </script>
+</body>
+</html>
