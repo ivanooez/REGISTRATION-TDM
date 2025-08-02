@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация на играчи</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1f1c2c, #928dab);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            animation: fadeInBody 2s ease;
+        }
+        h2 {
+            text-align: center;
+            color: #00ffe7;
+            text-shadow: 0 0 10px #00ffe7;
+            animation: glowTitle 3s infinite alternate;
+        }
+        form, .modal-content {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ffe7;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px #00ffe7;
+            animation: popIn 0.8s ease;
+            transition: transform 0.3s;
+        }
+        form:hover, .modal-content:hover {
+            transform: scale(1.02);
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            animation: slideInLeft 0.5s ease;
+        }
+        button {
+            padding: 12px 20px;
+            background: #00ffe7;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            animation: pulseBtn 1.5s infinite;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #00ccff;
+        }
+        #rules-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeInModal 0.6s ease;
+        }
+        #успех {
+            text-align: center;
+            font-size: 1.2em;
+            color: #a0ffb3;
+            animation: successGlow 2s infinite alternate;
+        }
+        @keyframes fadeInBody {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        @keyframes glowTitle {
+            from {text-shadow: 0 0 10px #00ffe7;}
+            to {text-shadow: 0 0 20px #00ffe7, 0 0 30px #00d4ff;}
+        }
+        @keyframes popIn {
+            0% {transform: scale(0.9); opacity: 0;}
+            100% {transform: scale(1); opacity: 1;}
+        }
+        @keyframes slideInLeft {
+            from {transform: translateX(-100%); opacity: 0;}
+            to {transform: translateX(0); opacity: 1;}
+        }
+        @keyframes pulseBtn {
+            0% {box-shadow: 0 0 0 0 rgba(0,255,231, 0.7);}
+            70% {box-shadow: 0 0 0 10px rgba(0,255,231, 0);}
+            100% {box-shadow: 0 0 0 0 rgba(0,255,231, 0);}
+        }
+        @keyframes fadeInModal {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        @keyframes successGlow {
+            from {text-shadow: 0 0 5px #00ff99;}
+            to {text-shadow: 0 0 20px #00ff99;}
+        }
+    </style>
+</head>
+<body>
+    <h2>Регистрация</h2>
+    <form id="registration-form">
+        <label for="pubg-id">PUBG ID:</label>
+        <input type="text" id="pubg-id" required><br><br>
+        <label for="nickname">Име по избор:</label>
+        <input type="text" id="nickname" required><br><br>
+        <button type="button" onclick="покажиПравила()">Регистрирай ме</button>
+    </form>
+    <div id="rules-modal">
+        <div class="modal-content">
+            <h3>Правила</h3>
+            <p>1. Забранено е използване на cheat програми.<br>
+               2. Уважение към всички играчи.<br>
+               3. Следване на указанията от модератори.</p>
+            <label><input type="checkbox" id="agree"> Съгласен съм с правилата.</label><br><br>
+            <button onclick="завършиРегистрация()">Съгласен съм и продължи</button>
+        </div>
+    </div>
+    <div id="успех" style="display:none; margin-top:20px; font-weight:bold;">
+        Поздравления! Записахте се успешно. Успех в играта!
+    </div>
+    <script>
+        function покажиПравила() {
+            document.getElementById('rules-modal').style.display = 'flex';
+        }
+        function завършиРегистрация() {
+            if (!document.getElementById('agree').checked) {
+                alert('Моля, приемете правилата преди да продължите.');
+                return;
+            }
+            const id = document.getElementById('pubg-id').value;
+            const name = document.getElementById('nickname').value;
+            const съществуващи = JSON.parse(localStorage.getItem('участници')) || [];
+            съществуващи.push({ id, name });
+            localStorage.setItem('участници', JSON.stringify(съществуващи));
+            document.getElementById('rules-modal').style.display = 'none';
+            document.getElementById('registration-form').style.display = 'none';
+            document.getElementById('успех').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
